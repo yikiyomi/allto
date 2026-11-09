@@ -35,3 +35,7 @@ Thumbs.db
 
 # 运行时数据（用户上传的头像等）
 /uploads/
+
+# 文档只保留 README，其余规划/笔记类 md 不入库
+*.md
+!README.md
