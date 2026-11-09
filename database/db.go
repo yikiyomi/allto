@@ -23,7 +23,20 @@ var (
 func InitDB(dsn string) error {
 	var err error
 	db, err = gorm.Open(mysql.Open(dsn), &gorm.Config{TranslateError: true})
-	return err
+	if err != nil {
+		return err
+	}
+	sqlDB, err := db.DB()
+	if err != nil {
+		return err
+	}
+	// 连接池上限必须低于 MySQL 的 max_connections（默认 151）。
+	// 不设的话 MaxOpenConns 默认为 0（无上限），并发一高就会把 MySQL 打满，
+	// 直接报 "Too many connections"，接口成片 500。
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+	return nil
 }
 
 func InitRedis(addr, password string) error {

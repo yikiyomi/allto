@@ -6,7 +6,7 @@ database:
 
 redis:
   addr: "192.168.100.128:6379"
-  password: ""
+  password: "123456"
 
 jwt:
   secret: "my_secret_key"
