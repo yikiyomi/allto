@@ -1,0 +1,26 @@
+server:
+  port: ":8080"
+
+database:
+  dsn: "root:123456@tcp(mysql:3306)/allto?charset=utf8mb4&parseTime=True&loc=Local"
+
+redis:
+  addr: "redis:6379"
+  password: ""
+
+jwt:
+  secret: "change-me-in-production"
+
+smtp:
+  host: ""
+  port: 587
+  username: ""
+  password: ""          # 用环境变量 APP_SMTP_PASSWORD
+  from: ""
+
+rabbitmq:
+  # compose 内的服务名；若连虚拟机宿主机上已跑的 RabbitMQ，改成宿主机网络地址
+  host: "rabbitmq"
+  port: 5672
+  username: "admin"
+  password: "password123"

@@ -1,0 +1,84 @@
+name: Go CI + Docker
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: 123456
+          MYSQL_DATABASE: allto
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 设置 Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.26'
+
+    - name: 静态检查
+      run: go vet ./...
+
+    - name: 下载依赖
+      run: go mod download
+
+    - name: 编译
+      run: go build -v ./...
+
+    # - name: 运行测试
+    #   env:
+    #     APP_DATABASE_DSN: root:123456@tcp(127.0.0.1:3306)/allto?parseTime=true
+    #     APP_REDIS_ADDR: localhost:6379
+    #     APP_JWT_SECRET: test_secret
+    #   run: go test ./... -v
+
+  docker:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    # 只在 push 到 main 分支时才构建并推送镜像（PR 时不推送）
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+    - name: 检出代码
+      uses: actions/checkout@v4
+
+    - name: 登录 Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+
+    - name: 构建并推送 Docker 镜像
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/allto:latest
+          ${{ secrets.DOCKER_USERNAME }}/allto:${{ github.sha }}

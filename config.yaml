@@ -1,0 +1,25 @@
+server:
+  port: ":8080"
+
+database:
+  dsn: "root:123456@tcp(127.0.0.1:3306)/allto?charset=utf8mb4&parseTime=True&loc=Local"
+
+redis:
+  addr: "192.168.100.128:6379"
+  password: ""
+
+jwt:
+  secret: "my_secret_key"
+
+smtp:
+  host: "smtp.qq.com"
+  port: 587         
+  username: ""
+  password: ""
+  from: ""
+
+rabbitmq:
+  host: "192.168.100.128"
+  port: 5672
+  username: "admin"
+  password: "password123"

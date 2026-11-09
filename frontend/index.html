@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AllTo 博客</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f6f8;
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 10px 10px 0 0;
+        }
+        .header h1 { font-size: 1.3em; font-weight: 600; color: #1a1a1a; }
+        .header .header-right { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+        .header-right .user-badge { color: #666; cursor: pointer; }
+        .header-right .user-badge:hover { color: #1a73e8; }
+        .header-right .btn-logout {
+            background: none; border: 1px solid #ddd; padding: 4px 12px;
+            border-radius: 4px; cursor: pointer; font-size: 13px; color: #666;
+        }
+        .header-right .btn-logout:hover { border-color: #999; color: #333; }
+        .nav { display: flex; background: #fff; border-bottom: 1px solid #e8e8e8; padding: 0 24px; }
+        .nav button {
+            padding: 12px 20px; border: none; background: transparent; color: #666;
+            cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s;
+        }
+        .nav button:hover { color: #333; }
+        .nav button.active { color: #1a1a1a; font-weight: 600; border-bottom-color: #1a1a1a; }
+        .sub-tabs { display: flex; border-bottom: 1px solid #f0f0f0; margin-bottom: 16px; }
+        .sub-tabs button {
+            padding: 8px 20px; border: none; background: transparent; color: #666;
+            cursor: pointer; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s;
+        }
+        .sub-tabs button:hover { color: #333; }
+        .sub-tabs button.active { color: #1a73e8; font-weight: 600; border-bottom-color: #1a73e8; }
+        .content { background: #fff; padding: 24px; border-radius: 0 0 10px 10px; min-height: 400px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #555; }
+        .form-group input, .form-group textarea {
+            width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px;
+            font-size: 14px; transition: border-color 0.2s; font-family: inherit;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none; border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 120px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: #1a1a1a; color: #fff; }
+        .btn-primary:hover { background: #333; }
+        .btn-outline { background: #fff; color: #555; border: 1px solid #ddd; }
+        .btn-outline:hover { border-color: #999; color: #333; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        .btn-follow { background: #1a73e8; color: #fff; padding: 6px 16px; border: none; border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 500; }
+        .btn-follow:hover { background: #1557b0; }
+        .btn-follow.following { background: #fff; color: #555; border: 1px solid #ddd; }
+        .btn-follow.following:hover { border-color: #e74c3c; color: #e74c3c; }
+        .section { display: none; }
+        .section.active { display: block; }
+        .post { padding: 20px 0; border-bottom: 1px solid #f0f0f0; }
+        .post:last-child { border-bottom: none; }
+        .post-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .post-avatar {
+            width: 36px; height: 36px; border-radius: 50%; background: #e0e0e0; color: #666;
+            display: flex; align-items: center; justify-content: center; font-size: 14px;
+            font-weight: 600; flex-shrink: 0; cursor: pointer; overflow: hidden;
+        }
+        .post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .post-avatar:hover { background: #d0d0d0; }
+        .post-author-info { display: flex; flex-direction: column; }
+        .post-author-name { font-size: 14px; font-weight: 600; color: #1a1a1a; cursor: pointer; }
+        .post-author-name:hover { color: #1a73e8; }
+        .post-time { font-size: 12px; color: #999; }
+        .post-title { font-size: 1.15em; font-weight: 600; color: #1a1a1a; margin-bottom: 8px; cursor: pointer; }
+        .post-title:hover { color: #1a73e8; }
+        .post-content { color: #555; line-height: 1.7; margin-bottom: 12px; font-size: 14px; }
+        .post-actions { display: flex; gap: 8px; }
+        .post-actions .btn { font-size: 13px; padding: 5px 14px; }
+        .comment { background: #f8f9fa; border-radius: 6px; padding: 12px; margin-top: 8px; }
+        .comment strong { font-size: 13px; }
+        .comment span { font-size: 14px; color: #444; }
+        .comments-section, .likers-section { margin-top: 12px; padding-top: 12px; border-top: 1px solid #f0f0f0; }
+        .liker-tag { display: inline-block; background: #e8f0fe; color: #1a73e8; padding: 3px 10px; border-radius: 12px; font-size: 13px; margin: 3px; cursor: pointer; }
+        .liker-tag:hover { background: #d0e0ff; }
+        .profile-card { text-align: center; padding: 30px 0 20px; border-bottom: 1px solid #f0f0f0; margin-bottom: 20px; }
+        .profile-avatar {
+            width: 72px; height: 72px; border-radius: 50%; background: #e0e0e0; color: #666;
+            display: flex; align-items: center; justify-content: center; font-size: 28px;
+            font-weight: 600; margin: 0 auto 12px; overflow: hidden; cursor: pointer; position: relative;
+        }
+        .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .profile-avatar:hover::after {
+            content: '更换头像'; position: absolute; bottom: 0; left: 0; right: 0;
+            background: rgba(0,0,0,0.5); color: #fff; font-size: 11px; padding: 4px 0; text-align: center;
+        }
+        .profile-name { font-size: 1.3em; font-weight: 600; margin-bottom: 4px; }
+        .profile-bio { color: #999; font-size: 14px; margin-bottom: 16px; }
+        .profile-stats { display: flex; justify-content: center; gap: 40px; margin-bottom: 20px; }
+        .profile-stat { text-align: center; }
+        .profile-stat .stat-num { font-size: 1.2em; font-weight: 700; color: #1a1a1a; }
+        .profile-stat .stat-label { font-size: 13px; color: #999; margin-top: 2px; }
+        .auth-box { max-width: 360px; margin: 40px auto; }
+        .auth-box h3 { text-align: center; margin-bottom: 20px; font-size: 1.2em; }
+        .message { padding: 10px 14px; border-radius: 6px; margin: 10px 0; font-size: 14px; }
+        .success { background: #e6f7e6; color: #2e7d32; }
+        .error { background: #fdecea; color: #c62828; }
+        .hidden { display: none !important; }
+        .empty-state { text-align: center; color: #999; padding: 40px 20px; font-size: 14px; }
+        .back-link { display: inline-block; color: #1a73e8; font-size: 14px; cursor: pointer; margin-bottom: 12px; }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>AllTo 博客</h1>
+        <div class="header-right" id="headerRight">
+            <span style="color:#999;font-size:14px;">未登录</span>
+        </div>
+    </div>
+
+    <div class="nav" id="navBar">
+        <button onclick="showSection('posts')" class="active">首页</button>
+        <button onclick="showSection('create')" class="nav-logged-in hidden">写文章</button>
+        <button onclick="showSection('login')" class="nav-logged-out">登录</button>
+    </div>
+
+    <div class="content">
+
+        <div id="login" class="section">
+            <div class="auth-box">
+                <!-- 登录表单 -->
+                <div id="loginForm">
+                    <h3>登录</h3>
+                    <div class="form-group"><input type="text" id="loginUsername" placeholder="用户名"></div>
+                    <div class="form-group"><input type="password" id="loginPassword" placeholder="密码"></div>
+                    <button class="btn btn-primary" onclick="login()" style="width:100%;">登录</button>
+                    <p style="text-align:center;margin-top:16px;font-size:13px;color:#999;">
+                        没有账号？<a href="javascript:void(0)" onclick="showRegisterForm()" style="color:#1a73e8;">注册</a>
+                    </p>
+                </div>
+                <!-- 注册表单 -->
+                <div id="registerForm" class="hidden">
+                    <h3>注册</h3>
+                    <div class="form-group"><input type="text" id="regUsername" placeholder="用户名"></div>
+                    <div class="form-group"><input type="password" id="regPassword" placeholder="密码"></div>
+                    <button class="btn btn-primary" onclick="register()" style="width:100%;">注册</button>
+                    <p style="text-align:center;margin-top:16px;font-size:13px;color:#999;">
+                        已有账号？<a href="javascript:void(0)" onclick="showLoginForm()" style="color:#1a73e8;">登录</a>
+                    </p>
+                </div>
+                <div id="authMessage"></div>
+            </div>
+        </div>
+
+        <div id="posts" class="section active">
+            <button class="btn btn-outline btn-sm" onclick="loadPosts()" style="margin-bottom:12px;">刷新</button>
+            <div id="postsList"></div>
+        </div>
+
+        <div id="create" class="section">
+            <h3 style="margin-bottom:16px;">写文章</h3>
+            <div class="form-group"><input type="text" id="postTitle" placeholder="标题"></div>
+            <div class="form-group"><textarea id="postContent" placeholder="内容（支持 Markdown 语法）"></textarea></div>
+            <button class="btn btn-primary" onclick="createPost()">发布</button>
+            <div id="postMessage"></div>
+        </div>
+
+        <div id="profile" class="section">
+            <span class="back-link" onclick="showSection('posts')">← 返回首页</span>
+            <div id="profileCard"></div>
+            <div id="profileTabs" class="sub-tabs"></div>
+            <div id="profilePosts"></div>
+        </div>
+
+        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadAvatar(event)">
+    </div>
+</div>
+
+<!-- 绑定邮箱弹窗 -->
+<div id="bindEmailModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:100;">
+    <div style="background:#fff;border-radius:10px;padding:24px;width:360px;">
+        <h3 style="margin-bottom:8px;">绑定邮箱</h3>
+        <p style="font-size:13px;color:#999;margin-bottom:16px;">为了账号安全，建议绑定邮箱</p>
+        <input type="email" id="bindEmailInput" placeholder="请输入邮箱" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px;">
+        <input type="text" id="verifyCodeInput" placeholder="输入6位验证码" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:6px;margin-bottom:12px;display:none;">
+        <div id="bindEmailMsg"></div>
+        <button class="btn btn-primary" id="bindEmailBtn" onclick="sendVerifyCode()" style="width:100%;">发送验证码</button>
+        <button class="btn btn-primary" id="verifyCodeBtn" onclick="verifyCode()" style="width:100%;margin-top:8px;display:none;">验证</button>
+        <button class="btn btn-outline" onclick="closeBindEmail()" style="width:100%;margin-top:8px;">暂不绑定</button>
+    </div>
+</div>
+
+<!-- 通知弹窗 -->
+<div id="notificationModal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);align-items:center;justify-content:center;z-index:100;">
+    <div style="background:#fff;border-radius:10px;padding:24px;width:400px;max-height:70%;overflow-y:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h3>通知</h3>
+            <button class="btn btn-outline btn-sm" onclick="markAllRead()">全部已读</button>
+        </div>
+        <div id="notificationList"></div>
+        <button class="btn btn-outline" onclick="closeNotifications()" style="width:100%;margin-top:12px;">关闭</button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080';
+    let token = localStorage.getItem('token');
+    let refreshToken = localStorage.getItem('refresh_token');
+    let currentUser = null;
+    let viewingUser = null;
+    let profileTab = 'posts';
+    let likedPostIds = new Set();
+    let isRefreshing = false;
+    let refreshQueue = [];
+    let eventSource = null;
+    let postsCursor = 0;
+    let postsHasMore = true;
+    let profileCursor = 0;
+    let profileHasMore = true;
+
+    // ---- 初始化 ----
+    if (token) {
+        const payload = parseJWT(token);
+        if (payload) {
+            currentUser = { id: payload.user_id, username: payload.username };
+        } else {
+            clearAuth();
+        }
+    }
+    updateHeader();
+    updateNav();
+    if (currentUser) { connectSSE(); loadUnreadCount(); }
+
+    function clearAuth() {
+        token = null;
+        refreshToken = null;
+        currentUser = null;
+        localStorage.removeItem('token');
+        localStorage.removeItem('refresh_token');
+    }
+
+    function updateNav() {
+        document.querySelectorAll('.nav-logged-in').forEach(b => b.classList.toggle('hidden', !currentUser));
+        document.querySelectorAll('.nav-logged-out').forEach(b => b.classList.toggle('hidden', !!currentUser));
+    }
+
+    // ---- 导航 ----
+    function showSection(name) {
+        if (name === 'create' && !currentUser) { showSection('login'); return; }
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        const target = document.getElementById(name);
+        if (target) target.classList.add('active');
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        const navMap = { posts: 0, create: 1, login: 2 };
+        if (navMap[name] !== undefined) {
+            document.querySelectorAll('.nav button')[navMap[name]].classList.add('active');
+        }
+        if (name === 'posts') { loadPosts(); loadLikedSet(); }
+    }
+
+    async function loadLikedSet() {
+        if (!token) return;
+        try {
+            const res = await api('GET', '/api/posts/likes');
+            const data = await res.json();
+            const likes = Array.isArray(data) ? data : (data.data || []);
+            likedPostIds = new Set(likes.map(item => {
+                const post = item.Post || item.post || item;
+                return post.ID || post.id;
+            }));
+        } catch (e) {}
+    }
+
+    // ---- 顶部栏 ----
+    function updateHeader() {
+        const h = document.getElementById('headerRight');
+        if (currentUser) {
+            h.innerHTML = `<span class="user-badge" onclick="showNotifications()" title="通知" style="font-size:16px;">\u{1F514}<span id="unreadBadge" style="display:none;background:#e74c3c;color:#fff;border-radius:10px;padding:1px 6px;font-size:11px;margin-left:3px;vertical-align:top;">0</span></span>
+                <span class="user-badge" onclick="viewMyProfile()">\u{1F464} ${escapeHTML(currentUser.username)}</span>
+                <button class="btn-logout" onclick="logout()">退出</button>`;
+        } else {
+            h.innerHTML = `<span style="color:#999;font-size:14px;cursor:pointer;" onclick="showSection('login')">未登录</span>`;
+        }
+    }
+
+    function viewMyProfile() { if (currentUser) viewProfile(currentUser.id); }
+
+    // ---- 鉴权（带自动刷新） ----
+    async function api(method, path, body) {
+        const headers = {};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        if (body) headers['Content-Type'] = 'application/json';
+        const res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+
+        // 不是 401，或者没 refresh_token，或者请求的本来就是 /refresh 自身 → 直接返回
+        if (res.status !== 401 || !refreshToken || path === '/refresh') return res;
+
+        // 并发刷新保护：如果正在刷新，把这次请求排队
+        if (isRefreshing) {
+            return new Promise(resolve => {
+                refreshQueue.push(() => resolve(api(method, path, body)));
+            });
+        }
+
+        isRefreshing = true;
+        try {
+            const refreshRes = await fetch(API_BASE + '/refresh', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh_token: refreshToken })
+            });
+            if (!refreshRes.ok) {
+                // 刷新失败 → 清空本地凭据，需要重新登录
+                clearAuth();
+                updateHeader();
+                updateNav();
+                return res; // 返回原始的 401
+            }
+            const refreshData = await refreshRes.json();
+            const d = refreshData.data || refreshData;
+            token = d.token || d.access_token;
+            refreshToken = d.refresh_token;
+            localStorage.setItem('token', token);
+            localStorage.setItem('refresh_token', refreshToken);
+            // 更新 currentUser
+            const payload = parseJWT(token);
+            if (payload) currentUser = { id: payload.user_id, username: payload.username };
+
+            // 重放排队的请求
+            const queue = refreshQueue;
+            refreshQueue = [];
+            queue.forEach(fn => fn());
+
+            // 用新 token 重试本次请求
+            const newHeaders = {};
+            if (token) newHeaders['Authorization'] = 'Bearer ' + token;
+            if (body) newHeaders['Content-Type'] = 'application/json';
+            return fetch(API_BASE + path, { method, headers: newHeaders, body: body ? JSON.stringify(body) : undefined });
+        } catch (e) {
+            return res; // 网络错误，返回原始 401
+        } finally {
+            isRefreshing = false;
+        }
+    }
+
+    function showLoginForm() {
+        document.getElementById('loginForm').classList.remove('hidden');
+        document.getElementById('registerForm').classList.add('hidden');
+        document.getElementById('authMessage').innerHTML = '';
+    }
+
+    function showRegisterForm() {
+        document.getElementById('loginForm').classList.add('hidden');
+        document.getElementById('registerForm').classList.remove('hidden');
+        document.getElementById('authMessage').innerHTML = '';
+    }
+
+    async function register() {
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value.trim();
+        if (!username || !password) return showMsg('authMessage', '请填写用户名和密码', 'error');
+        const res = await api('POST', '/register', { username, password });
+        const data = await res.json();
+        if (res.ok) {
+            showMsg('authMessage', '注册成功！请登录', 'success');
+            document.getElementById('regUsername').value = '';
+            document.getElementById('regPassword').value = '';
+            showLoginForm();
+        } else {
+            showMsg('authMessage', data.msg || data.error || '注册失败', 'error');
+        }
+    }
+
+    async function login() {
+        const username = document.getElementById('loginUsername').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!username || !password) return showMsg('authMessage', '请填写用户名和密码', 'error');
+        const res = await fetch(API_BASE + '/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.data) {
+            token = data.data.token;
+            refreshToken = data.data.refresh_token;
+            currentUser = data.data.user;
+            localStorage.setItem('token', token);
+            localStorage.setItem('refresh_token', refreshToken);
+            updateHeader();
+            updateNav();
+            connectSSE();
+            loadUnreadCount();
+            // 邮箱状态提示（都可跳过）
+            if (!currentUser.email) {
+                showBindEmail(); // 没邮箱 → 弹绑定邮箱弹窗
+            } else if (!currentUser.email_verified) {
+                showMsg('authMessage', '登录成功！邮箱未验证，可在个人主页补验证', 'success');
+                setTimeout(() => showSection('posts'), 500);
+            } else {
+                showMsg('authMessage', '登录成功！', 'success');
+                setTimeout(() => showSection('posts'), 500);
+            }
+        } else {
+            showMsg('authMessage', data.msg || data.error || '登录失败', 'error');
+        }
+    }
+
+    async function logout() {
+        if (token) {
+            try { await api('POST', '/api/logout'); } catch (e) {}
+        }
+        disconnectSSE();
+        clearAuth();
+        updateHeader();
+        updateNav();
+        showSection('posts');
+    }
+
+    // ---- 通知 ----
+    function connectSSE() {
+        if (!token || eventSource) return;
+        eventSource = new EventSource(API_BASE + '/notifications/stream?token=' + token);
+        eventSource.onmessage = function() {
+            loadUnreadCount(); // 收到推送，刷新未读红点
+        };
+        // onerror 不用处理，EventSource 会自动重连
+    }
+
+    function disconnectSSE() {
+        if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+        }
+    }
+
+    async function loadUnreadCount() {
+        if (!token) return;
+        try {
+            const res = await api('GET', '/api/notifications/unreadCount');
+            const data = await res.json();
+            const d = data.data || {};
+            const count = d.count || 0;
+            const badge = document.getElementById('unreadBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.style.display = 'inline';
+                } else {
+                    badge.style.display = 'none';
+                }
+            }
+        } catch (e) {}
+    }
+
+    function showNotifications() {
+        document.getElementById('notificationModal').style.display = 'flex';
+        loadNotifications();
+    }
+
+    function closeNotifications() {
+        document.getElementById('notificationModal').style.display = 'none';
+    }
+
+    async function loadNotifications() {
+        const container = document.getElementById('notificationList');
+        const res = await api('GET', '/api/notifications');
+        const data = await res.json();
+        const list = data.data || data || [];
+        if (list.length === 0) {
+            container.innerHTML = '<p style="color:#999;text-align:center;padding:20px;">暂无通知</p>';
+            return;
+        }
+        container.innerHTML = list.map(n => {
+            const text = notifyText(n);
+            const unread = (n.is_read || n.IsRead) ? '' : 'font-weight:600;';
+            return `<div style="padding:12px;border-bottom:1px solid #f0f0f0;${unread}">
+                <div style="font-size:14px;">${text}</div>
+                <div style="font-size:12px;color:#999;">${formatTime(n.created_at || n.CreatedAt)}</div>
+            </div>`;
+        }).join('');
+    }
+
+    async function markAllRead() {
+        const res = await api('POST', '/api/notifications/markRead', {});
+        if (res.ok) {
+            loadUnreadCount();
+            loadNotifications();
+        }
+    }
+
+    function notifyText(n) {
+        const t = n.type || n.Type;
+        if (t === 'like') return '有人点赞了你的文章';
+        if (t === 'comment') return '有人评论了你的文章';
+        if (t === 'follow') return '有人关注了你';
+        return '你有新通知';
+    }
+
+    // ---- 绑定邮箱 ----
+    function showBindEmail() {
+        document.getElementById('bindEmailModal').style.display = 'flex';
+    }
+
+    function closeBindEmail() {
+        document.getElementById('bindEmailModal').style.display = 'none';
+        showSection('posts');
+    }
+
+    async function sendVerifyCode() {
+        const email = document.getElementById('bindEmailInput').value.trim();
+        if (!email) return showMsg('bindEmailMsg', '请输入邮箱', 'error');
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return showMsg('bindEmailMsg', '邮箱格式不正确', 'error');
+        const res = await api('POST', '/api/send-verify-code', { email });
+        const data = await res.json();
+        if (res.ok) {
+            showMsg('bindEmailMsg', '验证码已发送，请查收', 'success');
+            document.getElementById('verifyCodeInput').style.display = 'block';
+            document.getElementById('verifyCodeBtn').style.display = 'block';
+            document.getElementById('bindEmailBtn').textContent = '重新发送';
+        } else {
+            showMsg('bindEmailMsg', data.msg || data.error || '发送失败', 'error');
+        }
+    }
+
+    async function verifyCode() {
+        const email = document.getElementById('bindEmailInput').value.trim();
+        const code = document.getElementById('verifyCodeInput').value.trim();
+        if (!code) return showMsg('bindEmailMsg', '请输入验证码', 'error');
+        const res = await api('POST', '/verify-email', { email, code });
+        const data = await res.json();
+        if (res.ok) {
+            showMsg('bindEmailMsg', '验证成功！', 'success');
+            setTimeout(() => closeBindEmail(), 800);
+        } else {
+            showMsg('bindEmailMsg', data.msg || data.error || '验证失败', 'error');
+        }
+    }
+
+    // ---- 文章列表 ----
+    async function loadPosts() {
+        const container = document.getElementById('postsList');
+        postsCursor = 0;
+        postsHasMore = true;
+        const res = await api('GET', '/api/posts?cursor=0');
+        if (!res.ok) { container.innerHTML = '<p class="empty-state">加载失败</p>'; return; }
+        const data = await res.json();
+        const d = data.data || data;
+        const posts = Array.isArray(d) ? d : (d.data || []);
+        postsCursor = (d && d.next_cursor) || 0;
+        postsHasMore = !!(d && d.has_more);
+        if (posts.length === 0) {
+            container.innerHTML = '<p class="empty-state">暂无文章</p>';
+        } else {
+            container.innerHTML = posts.map(p => renderPost(p)).join('') + loadMoreBtn();
+        }
+    }
+
+    async function loadMorePosts() {
+        const wrap = document.getElementById('loadMoreWrap');
+        if (wrap) wrap.remove();
+        const container = document.getElementById('postsList');
+        const res = await api('GET', '/api/posts?cursor=' + postsCursor);
+        if (!res.ok) return;
+        const data = await res.json();
+        const d = data.data || data;
+        const posts = Array.isArray(d) ? d : (d.data || []);
+        postsCursor = (d && d.next_cursor) || 0;
+        postsHasMore = !!(d && d.has_more);
+        container.insertAdjacentHTML('beforeend', posts.map(p => renderPost(p)).join('') + loadMoreBtn());
+    }
+
+    function loadMoreBtn() {
+        if (!postsHasMore) return '';
+        return '<div id="loadMoreWrap" style="text-align:center;padding:16px;"><button class="btn btn-outline btn-sm" onclick="loadMorePosts()">加载更多</button></div>';
+    }
+
+    function renderPost(post) {
+        const pId = post.ID || post.id;
+        const title = escapeHTML(post.Title || post.title || '(无标题)');
+        const content = escapeHTML(post.Content || post.content || '').substring(0, 300);
+        const author = post.User || post.user || {};
+        const authorName = escapeHTML(author.Username || author.username || '匿名');
+        const authorId = author.ID || author.id || 0;
+        const avatarUrl = author.AvatarUrl || author.avatar_url || '';
+        const time = formatTime(post.CreatedAt || post.created_at || post.createdAt);
+        const liked = likedPostIds.has(pId);
+        const likeCount = post.LikeCount || post.like_count || post.likeCount || 0;
+        return '<div class="post"><div class="post-header">'
+            + `<div class="post-avatar" onclick="viewProfile(${authorId})">${avatarUrl ? '<img src="'+avatarUrl+'" alt="'+authorName+'">' : authorName[0]}</div>`
+            + '<div class="post-author-info">'
+            + `<span class="post-author-name" onclick="viewProfile(${authorId})">${authorName}</span>`
+            + `<span class="post-time">${time}</span></div></div>`
+            + `<div class="post-title" onclick="viewPost(${pId})">${title}</div>`
+            + `<div class="post-content">${content}</div>`
+            + '<div class="post-actions">'
+            + `<button class="btn btn-outline btn-sm" onclick="toggleLike(${pId})" id="like-btn-${pId}">${liked ? '❤️' : '\u{1F90D}'} ${likeCount}</button>`
+            + `<button class="btn btn-outline btn-sm" onclick="toggleComments(${pId})">\u{1F4AC}</button>`
+            + `<button class="btn btn-outline btn-sm" onclick="toggleLikers(${pId})">\u{1F44D} 赞过</button></div>`
+            + `<div id="comments-${pId}" class="comments-section hidden"></div>`
+            + `<div id="likers-${pId}" class="likers-section hidden"></div></div>`;
+    }
+
+    function viewPost(postId) { toggleComments(postId); }
+
+    // ---- 用户主页 ----
+    async function viewProfile(userId) {
+        if (!currentUser) { alert('请先登录'); showSection('login'); return; }
+        showSection('profile');
+        profileTab = 'posts';
+        document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+        const profileCard = document.getElementById('profileCard');
+        const profileTabs = document.getElementById('profileTabs');
+        const profilePosts = document.getElementById('profilePosts');
+        profileCard.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">加载中…</p>';
+        profileTabs.innerHTML = '';
+        profilePosts.innerHTML = '';
+
+        let userInfo = null;
+        try {
+            const res = await api('GET', '/api/users/' + userId);
+            if (res.ok) { const data = await res.json(); userInfo = data.data || data; }
+        } catch (e) {}
+        if (!userInfo) { profileCard.innerHTML = '<p class="empty-state">用户不存在或加载失败</p>'; return; }
+
+        const isMe = currentUser && currentUser.id === userId;
+        const name = escapeHTML(userInfo.Username || userInfo.username || '用户');
+        const avatarUrl = escapeHTML(userInfo.AvatarUrl || userInfo.avatar_url || '');
+        const bio = escapeHTML(userInfo.Bio || userInfo.bio || '');
+        const postCount = userInfo.PostCount || userInfo.post_count || 0;
+        const followerCount = userInfo.FollowerCount || userInfo.follower_count || 0;
+        const followingCount = userInfo.FollowingCount || userInfo.following_count || 0;
+        const joined = formatTime(userInfo.CreatedAt || userInfo.created_at || '');
+        viewingUser = { id: userId, username: name };
+
+        profileCard.innerHTML = '<div class="profile-card">'
+            + `<div class="profile-avatar" ${isMe ? 'onclick="document.getElementById(\'avatarInput\').click()" title="点击更换头像"' : ''}>`
+            + `${avatarUrl ? '<img src="'+avatarUrl+'" alt="'+name+'">' : name[0]}</div>`
+            + `<div class="profile-name">${name}</div>`
+            + (bio ? `<div class="profile-bio" id="profileBio">${bio}</div>` + (isMe ? '<button class="btn btn-outline btn-sm" onclick="editBio()" style="margin-bottom:4px;">编辑简介</button>' : '') : (isMe ? '<div class="profile-bio" id="profileBio" style="color:#ccc;cursor:pointer;" onclick="editBio()">添加简介…</div>' : ''))
+            + `<div class="profile-bio" style="color:#bbb;">${joined ? '加入于 ' + joined : ''}</div>`
+            + '<div class="profile-stats">'
+            + `<div class="profile-stat"><div class="stat-num">${postCount}</div><div class="stat-label">文章</div></div>`
+            + `<div class="profile-stat"><div class="stat-num">${followerCount}</div><div class="stat-label">粉丝</div></div>`
+            + `<div class="profile-stat"><div class="stat-num">${followingCount}</div><div class="stat-label">关注</div></div>`
+            + '</div>'
+            + (isMe ? '' : `<button class="btn-follow" id="btnFollow" onclick="toggleFollow(${userId})">关注</button>`)
+            + '</div>';
+
+        if (isMe) {
+            profileTabs.innerHTML = `<button onclick="switchProfileTab('posts',${userId})" class="active">我的文章</button>`
+                + `<button onclick="switchProfileTab('likes',${userId})">我的点赞</button>`;
+        } else { profileTabs.innerHTML = ''; }
+
+        if (!isMe && token) checkFollowStatus(userId);
+        await loadProfilePosts(userId);
+    }
+
+    async function switchProfileTab(tab, userId) {
+        profileTab = tab;
+        document.querySelectorAll('#profileTabs button').forEach((b, i) => {
+            b.classList.toggle('active', (tab === 'posts' && i === 0) || (tab === 'likes' && i === 1));
+        });
+        if (tab === 'posts') await loadProfilePosts(userId); else await loadProfileLikes();
+    }
+
+    async function loadProfilePosts(userId) {
+        const container = document.getElementById('profilePosts');
+        profileCursor = 0;
+        profileHasMore = true;
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">加载中…</p>';
+        try {
+            const res = await api('GET', '/api/users/' + userId + '/posts?cursor=0');
+            const data = await res.json();
+            const d = data.data || data;
+            const posts = Array.isArray(d) ? d : (d.data || []);
+            profileCursor = (d && d.next_cursor) || 0;
+            profileHasMore = !!(d && d.has_more);
+            container.innerHTML = posts.length === 0 ? '<p class="empty-state">暂无文章</p>' : posts.map(p => renderPost(p)).join('') + profileLoadMoreBtn();
+        } catch (e) { container.innerHTML = '<p class="empty-state">加载失败</p>'; }
+    }
+
+    async function loadMoreProfilePosts() {
+        const userId = viewingUser ? viewingUser.id : 0;
+        if (!userId) return;
+        const wrap = document.getElementById('profileLoadMoreWrap');
+        if (wrap) wrap.remove();
+        const container = document.getElementById('profilePosts');
+        const res = await api('GET', '/api/users/' + userId + '/posts?cursor=' + profileCursor);
+        if (!res.ok) return;
+        const data = await res.json();
+        const d = data.data || data;
+        const posts = Array.isArray(d) ? d : (d.data || []);
+        profileCursor = (d && d.next_cursor) || 0;
+        profileHasMore = !!(d && d.has_more);
+        container.insertAdjacentHTML('beforeend', posts.map(p => renderPost(p)).join('') + profileLoadMoreBtn());
+    }
+
+    function profileLoadMoreBtn() {
+        if (!profileHasMore) return '';
+        return '<div id="profileLoadMoreWrap" style="text-align:center;padding:16px;"><button class="btn btn-outline btn-sm" onclick="loadMoreProfilePosts()">加载更多</button></div>';
+    }
+
+    async function loadProfileLikes() {
+        const container = document.getElementById('profilePosts');
+        if (!token) { container.innerHTML = '<p class="empty-state">请先登录</p>'; return; }
+        container.innerHTML = '<p style="text-align:center;padding:20px;color:#999;">加载中…</p>';
+        try {
+            const res = await api('GET', '/api/posts/likes');
+            const data = await res.json();
+            const likes = Array.isArray(data) ? data : (data.data || []);
+            container.innerHTML = likes.length === 0 ? '<p class="empty-state">暂无点赞记录</p>'
+                : likes.map(item => { const post = item.Post || item.post || item; return renderPost(post); }).join('');
+        } catch (e) { container.innerHTML = '<p class="empty-state">加载失败</p>'; }
+    }
+
+    async function checkFollowStatus(userId) {
+        try {
+            const res = await api('GET', '/api/following');
+            if (res.ok) {
+                const data = await res.json();
+                const list = data.data || data || [];
+                const isFollowing = list.some(u => (u.ID || u.id) === userId);
+                const btn = document.getElementById('btnFollow');
+                if (btn) { btn.textContent = isFollowing ? '已关注' : '关注'; if (isFollowing) btn.classList.add('following'); }
+            }
+        } catch (e) {}
+    }
+
+    async function toggleFollow(userId) {
+        const btn = document.getElementById('btnFollow');
+        const isFollowing = btn.classList.contains('following');
+        const res = await api(isFollowing ? 'DELETE' : 'POST', '/api/follow/' + userId);
+        if (res.ok) {
+            if (isFollowing) { btn.textContent = '关注'; btn.classList.remove('following'); }
+            else { btn.textContent = '已关注'; btn.classList.add('following'); }
+        }
+    }
+
+    // ---- 编辑简介 ----
+    async function editBio() {
+        const currentBio = document.getElementById('profileBio')?.textContent || '';
+        const newBio = prompt('编辑个人简介', currentBio === '添加简介…' ? '' : currentBio);
+        if (newBio === null) return;
+        const res = await api('POST', '/api/profile', { bio: newBio });
+        if (res.ok) { if (viewingUser) viewProfile(viewingUser.id); } else { alert('保存失败'); }
+    }
+
+    // ---- 上传头像 ----
+    async function uploadAvatar(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        if (file.size > 10 * 1024 * 1024) { alert('头像不能超过 10MB'); return; }
+        const formData = new FormData();
+        formData.append('avatar', file);
+        const headers = {};
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        try {
+            const res = await fetch(API_BASE + '/api/avatar', { method: 'POST', headers, body: formData });
+            if (res.ok) { if (viewingUser) viewProfile(viewingUser.id); } else { alert('上传失败'); }
+        } catch (e) { alert('网络错误'); }
+        event.target.value = '';
+    }
+
+    // ---- 点赞 ----
+    async function toggleLike(postId) {
+        if (!token) { alert('请先登录'); return; }
+        const liked = likedPostIds.has(postId);
+        const res = await api(liked ? 'DELETE' : 'POST', '/api/posts/' + postId + '/like');
+        if (res.ok) {
+            if (liked) likedPostIds.delete(postId); else likedPostIds.add(postId);
+            loadPosts();
+        }
+    }
+
+    async function toggleComments(postId) {
+        const el = document.getElementById('comments-' + postId);
+        if (!el.classList.contains('hidden')) { el.classList.add('hidden'); return; }
+        el.classList.remove('hidden');
+        const res = await api('GET', '/api/posts/' + postId + '/comments');
+        const data = await res.json();
+        const comments = Array.isArray(data) ? data : (data.data || []);
+        el.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:10px;">'
+            + `<input type="text" id="commentInput-${postId}" placeholder="写评论…" style="flex:1;padding:6px 10px;border:1px solid #ddd;border-radius:4px;font-size:13px;">`
+            + `<button class="btn btn-primary btn-sm" onclick="addComment(${postId})">发表</button></div>`
+            + (comments.length === 0 ? '<p style="color:#999;font-size:13px;">暂无评论</p>'
+                : comments.map(c => { const cUser = c.User || c.user || {}; return '<div class="comment"><strong>' + escapeHTML(cUser.Username || cUser.username || '用户') + '</strong> <span>' + escapeHTML(c.Content || c.content || '') + '</span></div>'; }).join(''));
+    }
+
+    async function addComment(postId) {
+        if (!token) { alert('请先登录'); return; }
+        const input = document.getElementById('commentInput-' + postId);
+        const content = input.value.trim();
+        if (!content) return;
+        const res = await api('POST', '/api/posts/' + postId + '/comments', { content });
+        if (res.ok) { input.value = ''; document.getElementById('comments-' + postId).classList.add('hidden'); toggleComments(postId); }
+    }
+
+    async function toggleLikers(postId) {
+        const el = document.getElementById('likers-' + postId);
+        if (!el.classList.contains('hidden')) { el.classList.add('hidden'); return; }
+        el.classList.remove('hidden');
+        const res = await api('GET', '/api/posts/' + postId + '/likers');
+        const data = await res.json();
+        const likers = Array.isArray(data) ? data : (data.data || []);
+        el.innerHTML = likers.length === 0 ? '<p style="color:#999;font-size:13px;">暂无点赞</p>'
+            : likers.map(l => { const lid = l.ID || l.id; const lname = escapeHTML(l.Username || l.username || '用户'); return `<span class="liker-tag" onclick="viewProfile(${lid})">${lname}</span>`; }).join('');
+    }
+
+    // ---- 发文章 ----
+    async function createPost() {
+        if (!token) return showMsg('postMessage', '请先登录', 'error');
+        const title = document.getElementById('postTitle').value.trim();
+        const content = document.getElementById('postContent').value.trim();
+        if (!title || !content) return showMsg('postMessage', '请填写标题和内容', 'error');
+        const res = await api('POST', '/api/posts', { title, content });
+        if (res.ok) {
+            showMsg('postMessage', '发布成功！', 'success');
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postContent').value = '';
+            setTimeout(() => showSection('posts'), 500);
+        } else {
+            const data = await res.json();
+            showMsg('postMessage', data.msg || data.error || '发布失败', 'error');
+        }
+    }
+
+    // ---- 工具 ----
+    function showMsg(id, msg, cls) {
+        const el = document.getElementById(id);
+        el.innerHTML = `<div class="message ${cls}">${msg}</div>`;
+        setTimeout(() => { el.innerHTML = ''; }, 4000);
+    }
+
+    function escapeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str || '';
+        return div.innerHTML;
+    }
+
+    function formatTime(t) {
+        if (!t) return '';
+        const d = new Date(t);
+        if (isNaN(d.getTime())) return t;
+        return d.toLocaleDateString('zh-CN') + ' ' + d.toLocaleTimeString('zh-CN', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function parseJWT(token) {
+        try { const payload = token.split('.')[1]; return JSON.parse(atob(payload)); }
+        catch (e) { return null; }
+    }
+
+    if (currentUser || !token) { loadPosts(); }
+</script>
+</body>
+</html>
